@@ -1,0 +1,4 @@
+*.vcf
+audit.json
+*.exe
+private-key*

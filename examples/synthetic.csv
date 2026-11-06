@@ -1,0 +1,4 @@
+id,display_name,allow_export,email,phone,private_notes
+DEMO-1,Synthetic Editor,true,editor@example.invalid,+85512345678,This must never enter the vCard
+DEMO-2,Synthetic Reviewer,false,reviewer@example.invalid,,Excluded intentionally
+DEMO-3,Synthetic Contact,true,invalid-address,,Needs correction

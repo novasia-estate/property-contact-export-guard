@@ -1,0 +1,13 @@
+name: Verify
+on: [push, workflow_dispatch]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - run: go test -race ./...
+      - run: go vet ./...
+      - run: go run ./cmd/contact-export-guard --input examples/synthetic.csv --uid-key-file examples/SYNTHETIC-KEY.txt --out ${{ runner.temp }}/contacts.vcf --audit ${{ runner.temp }}/audit.json
