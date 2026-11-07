@@ -13,6 +13,7 @@ func main() {
 	output := flag.String("out", "", "new vCard output path")
 	audit := flag.String("audit", "", "new value-free JSON audit path")
 	keyPath := flag.String("uid-key-file", "", "private file containing at least 32 bytes for stable HMAC UIDs")
+	strict := flag.Bool("strict-headers", false, "reject unexpected header columns before exporting contacts")
 	flag.Parse()
 	if *input == "" || *output == "" || *audit == "" || *keyPath == "" {
 		flag.Usage()
@@ -28,7 +29,7 @@ func main() {
 		fail(e)
 	}
 	defer in.Close()
-	result, e := guard.Convert(in, key)
+	result, e := guard.ConvertWithOptions(in, key, guard.Options{RejectUnknownHeaders: *strict})
 	if e != nil {
 		fail(e)
 	}

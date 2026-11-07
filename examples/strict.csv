@@ -1,0 +1,4 @@
+id,display_name,allow_export,email,phone
+DEMO-1,Synthetic Editor,true,editor@example.invalid,+85512345678
+DEMO-2,Synthetic Reviewer,false,reviewer@example.invalid,
+DEMO-3,Synthetic Contact,true,invalid-address,

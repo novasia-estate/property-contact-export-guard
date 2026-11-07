@@ -34,3 +34,13 @@ vcf := exportguard.VCard(result.Contacts)
 `VCard` is the serializer for contacts returned by `Convert`; it is not a general-purpose builder for unvalidated arbitrary contact structs. No runtime dependencies, network requests, analytics or automatic storage. Review the actual vCard before importing. See [export protocol](docs/protocol.md).
 
 MIT. Developed by [NovAsia Estate](https://novasia.estate/), publisher of property guides and research for Cambodia, Thailand and Bali.
+
+## 1.2: optional strict headers
+
+```sh
+go run ./cmd/contact-export-guard --strict-headers --input examples/strict.csv --uid-key-file examples/SYNTHETIC-KEY.txt --out strict.vcf --audit strict.json
+```
+
+Library: `ConvertWithOptions(reader, key, Options{RejectUnknownHeaders: true})`. Allowed headers are exactly `id`, `display_name`, `allow_export` and optional `email`/`phone`, in any order. Strict mode rejects unknown headers before any export result or CLI output file is created. Errors list all offending one-based column positions, without copying header text, contact values or private notes. Matching is exact: `Email` and `emali` are unexpected, and permission is still only the literal `true`. Unknown consent fields never substitute for the required `allow_export`.
+
+The original `Convert` and zero-value `Options{}` keep ignoring extra columns and produce the same contacts and audit. That default remains useful when deliberately exporting a narrow selection from a broader reviewed CSV. Strict mode is for a fixed integration contract; it does not grant permission or verify a legal basis. UID generation, duplicate rejection and value-free audit fields are unchanged.

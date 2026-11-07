@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/mail"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -38,12 +39,25 @@ type Result struct {
 
 var phonePattern = regexp.MustCompile(`^\+[1-9][0-9]{6,14}$`)
 
+// Options selects additional import-boundary checks. The zero value preserves Convert behavior.
+type Options struct {
+	// RejectUnknownHeaders rejects the complete input when a header is outside
+	// id, display_name, allow_export, email and phone. Errors report positions, not values.
+	RejectUnknownHeaders bool
+}
+
 // Convert reads a UTF-8 CSV with id, display_name, allow_export and optional email/phone.
 // Only the literal allow_export value "true" permits export. Duplicate source IDs
 // are all rejected. A separate 32-byte or longer HMAC key creates stable opaque UIDs.
 // Maximum input size is 10 MiB and maximum row count is 100000. Unexpected columns
 // are ignored; no addresses, notes, organisations or custom fields are exported.
 func Convert(input io.Reader, uidKey []byte) (Result, error) {
+	return ConvertWithOptions(input, uidKey, Options{})
+}
+
+// ConvertWithOptions applies optional header checks before creating any contact result.
+// Strict headers do not change consent, duplicate-ID, HMAC UID or value-free audit rules.
+func ConvertWithOptions(input io.Reader, uidKey []byte, options Options) (Result, error) {
 	if len(uidKey) < 32 {
 		return Result{}, errors.New("UID key requires at least 32 bytes")
 	}
@@ -77,6 +91,19 @@ func Convert(input io.Reader, uidKey []byte) (Result, error) {
 	for _, s := range []string{"id", "display_name", "allow_export"} {
 		if _, ok := columns[s]; !ok {
 			return Result{}, errors.New("missing required CSV header: " + s)
+		}
+	}
+	if options.RejectUnknownHeaders {
+		unknown := []string{}
+		for i, name := range rows[0] {
+			switch name {
+			case "id", "display_name", "allow_export", "email", "phone":
+			default:
+				unknown = append(unknown, strconv.Itoa(i+1))
+			}
+		}
+		if len(unknown) > 0 {
+			return Result{}, errors.New("unexpected CSV header columns: " + strings.Join(unknown, ","))
 		}
 	}
 	get := func(r []string, k string) string {
